@@ -27,7 +27,7 @@ app.use(function(req, res, next)
 
 var last_key = "key";
 
-app.get('/set', function(req, res) {
+var setFunction = function(req, res) {
     {
         var key = 'key'+Math.round(Math.random()*(1000));
         redisClient.set(key, "this message will self-destruct in 10 seconds");
@@ -35,16 +35,15 @@ app.get('/set', function(req, res) {
         redisClient.expire(key, 10);
         res.send("Key Set!");
     }
-})
+};
 
-
-app.get('/get', function(req, res) {
+var getFunction = function(req, res) {
         redisClient.get(last_key, function(err,value){
             res.send(value);
         })
-})
+};
 
-app.get('/recent', function(req, res) {
+var recentFunction = function(req, res) {
         // console.log('Recived a request');
         var responseText = '';
         redisClient.lrange('recent_queue', 0, 4, function(err,list){
@@ -54,11 +53,17 @@ app.get('/recent', function(req, res) {
             res.send(responseText);
         })
 
-})
+};
 
-app.post('/upload',[ multer({ dest: './uploads/'}), function(req, res){
-   // console.log(req.body) // form fields
-   // console.log(req.files) // form files
+var meowFunction = function(req, res) {
+    res.writeHead(200, {'content-type':'text/html'});
+    redisClient.lpop('image_queue', function(err, imgData){
+        res.write("<h1>\n<img src='data:my_pic.jpg;base64,"+imgData+"'/>");
+        res.end();
+    })
+};
+
+var uploadFunction = function(req, res){
 
    if( req.files.image )
    {
@@ -71,23 +76,20 @@ app.post('/upload',[ multer({ dest: './uploads/'}), function(req, res){
     }
 
    res.status(204).end()
-}]);
+};
 
-app.get('/meow', function(req, res) {
-    {
-        // if (err) throw err
-        res.writeHead(200, {'content-type':'text/html'});
-        redisClient.lpop('image_queue', function(err, imgData){
-            res.write("<h1>\n<img src='data:my_pic.jpg;base64,"+imgData+"'/>");
-            res.end();
-        })
-        // items.forEach(function (imagedata) 
-        // {
-        // res.write("<h1>\n<img src='data:my_pic.jpg;base64,"+imagedata+"'/>");
-        // });
-    
-    }
-})
+app.get('/set', setFunction);
+app.post('/set', setFunction);
+
+app.get('/get', getFunction);
+// app.post('/get', getFunction);
+
+app.get('/recent', recentFunction);
+// app.post('/recent', recentFunction);
+
+app.post('/upload',[ multer({ dest: './uploads/'}), uploadFunction]);
+
+app.get('/meow', meowFunction);
 
 var port = process.argv.splice(2)[0];
 
