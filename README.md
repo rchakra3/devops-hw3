@@ -6,6 +6,14 @@
 - [Screencast](https://youtu.be/AQH4UJASegE)
 
 
+## Running:
+
+```
+npm install
+node app.js 3000& node app.js 3001& node app.js 3002& (etc)
+node proxy.js 3000 3001 3002
+```
+
 ## Functionality:
 
 - ***Basic set/get, request, upload functionality***
